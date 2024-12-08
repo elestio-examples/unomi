@@ -147,59 +147,110 @@ Using the built-in tracker is pretty simple, simply add the following code to yo
 
 This will only load the tracker. To initialize it use a snipper like the following code:
 
-    <script>
-        (function () {
-            const unomiWebTracker = unomiTracker.useTracker();
-            const unomiTrackerTestConf = {
-                scope: "unomi-tracker-test",
-                site: {
-                    siteInfo: {
-                        siteID: "unomi-tracker-test"
-                    }
-                },
-                page: {
-                    pageInfo: {
-                        pageID: "unomi-tracker-test-page",
-                        pageName: document.title,
-                        pagePath: document.location.pathname,
-                        destinationURL: document.location.href,
-                        language: "en",
-                        categories: [],
-                        tags: []
+    <script type="text/javascript">
+      (function () {
+        const unomiTrackerTestConf = {
+          scope: "unomi-tracker-test",
+          site: {
+            siteInfo: {
+              siteID: "unomi-tracker-test",
+            },
+          },
+          page: {
+            pageInfo: {
+              pageID: "unomi-tracker-test-page",
+              pageName: document.title,
+              pagePath: document.location.pathname,
+              destinationURL:
+                document.location.origin + document.location.pathname,
+              language: "en",
+              categories: [],
+              tags: [],
+            },
+            consentTypes: [],
+          },
+          "events:": [],
+          wemInitConfig: {
+            contextServerUrl: "https://[CI_CD_DOMAIN]",
+            timeoutInMilliseconds: "1500",
+            contextServerCookieName: "context-profile-id",
+            activateWem: true,
+            trackerSessionIdCookieName: "unomi-tracker-test-session-id",
+            trackerProfileIdCookieName: "unomi-tracker-test-profile-id",
+          },
+        };
+
+        // generate a new session
+        if (
+          unomiWebTracker.getCookie(
+            unomiTrackerTestConf.wemInitConfig.trackerSessionIdCookieName
+          ) == null
+        ) {
+          unomiWebTracker.setCookie(
+            unomiTrackerTestConf.wemInitConfig.trackerSessionIdCookieName,
+            unomiWebTracker.generateGuid(),
+            1
+          );
+        }
+
+        // init tracker with our conf
+        unomiWebTracker.initTracker(unomiTrackerTestConf);
+
+        unomiWebTracker._registerCallback(() => {
+          console.log(
+            "Unomi tracker test successfully loaded context",
+            unomiWebTracker.getLoadedContext()
+          );
+        }, "Unomi tracker test callback example");
+
+        variants = {
+          var1: {
+            content: "variant1",
+          },
+          var2: {
+            content: "variant2",
+          },
+        };
+        unomiWebTracker.registerPersonalizationObject(
+          {
+            id: "testPersonalization",
+            strategy: "matching-first",
+            strategyOptions: { fallback: "var2" },
+            contents: [
+              {
+                id: "var1",
+                filters: [
+                  {
+                    condition: {
+                      type: "profilePropertyCondition",
+                      parameterValues: {
+                        propertyName:
+                          "properties.pageViewCount.unomi-tracker-test",
+                        comparisonOperator: "greaterThan",
+                        propertyValueInteger: 5,
+                      },
                     },
-                    attributes: {},
-                    consentTypes: []
-                },
-                wemInitConfig: {
-                    contextServerUrl: "https://[CI_CD_DOMAIN]",
-                    timeoutInMilliseconds: 1500,
-                    contextServerCookieName: "context-profile-id",
-                    activateWem: true,
-                    trackerSessionIdCookieName: "unomi-tracker-test-session-id",
-                    trackerProfileIdCookieName: "unomi-tracker-test-profile-id"
-                }
-            };
-
-            // Générer une nouvelle session si nécessaire
-            if (!unomiWebTracker.getCookie(unomiTrackerTestConf.wemInitConfig.trackerSessionIdCookieName)) {
-                unomiWebTracker.setCookie(
-                    unomiTrackerTestConf.wemInitConfig.trackerSessionIdCookieName,
-                    unomiWebTracker.generateGuid(),
-                    1
-                );
+                  },
+                ],
+              },
+              {
+                id: "var2",
+              },
+            ],
+          },
+          variants,
+          false,
+          function (successfulFilters, selectedFilter) {
+            if (selectedFilter) {
+              document.getElementById(selectedFilter.content).style.display =
+                "";
             }
+          }
+        );
 
-            // Initialiser le tracker avec la configuration
-            unomiWebTracker.initTracker(unomiTrackerTestConf);
-
-            // Enregistrer un callback pour le chargement du contexte
-            unomiWebTracker._registerCallback(() => {
-                console.log("Contexte chargé avec succès", unomiWebTracker.getLoadedContext());
-            }, 'Callback de test du tracker Unomi');
-
-            // Démarrer le tracker
-            unomiWebTracker.startTracker();
-        })();
+        // start the tracker
+        unomiWebTracker.startTracker();
+      })();
     </script>
 
 ## Creating a scope to collect the data
