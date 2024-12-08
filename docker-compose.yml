@@ -1,0 +1,28 @@
+version: "2.4"
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.4.2
+    volumes: # Persist ES data in separate "esdata" volume
+      - ./esdata1:/usr/share/elasticsearch/data
+    environment:
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1G -Xmx1G"
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - cluster.name=contextElasticSearch
+    ports: # Expose Elasticsearch ports
+      - "172.17.0.1:9200:9200"
+
+  unomi:
+    image: apache/unomi:${SOFTWARE_VERSION_TAG}
+    container_name: unomi
+    environment:
+      - UNOMI_ELASTICSEARCH_ADDRESSES=elasticsearch:9200
+    ports:
+      - 172.17.0.1:8181:8181
+      - 172.17.0.1:19443:9443
+      - 172.17.0.1:18102:8102
+    links:
+      - elasticsearch
+    depends_on:
+      - elasticsearch
