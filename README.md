@@ -166,7 +166,6 @@ This will only load the tracker. To initialize it use a snipper like the followi
                         "categories": [],
                         "tags": []
                     },
-                    "attributes": {},
                     "consentTypes": []
                 },
                 "events:": [],
@@ -191,6 +190,39 @@ This will only load the tracker. To initialize it use a snipper like the followi
             unomiWebTracker._registerCallback(() => {
                 console.log("Unomi tracker test successfully loaded context", unomiWebTracker.getLoadedContext());
             }, 'Unomi tracker test callback example');
+
+            variants = {
+                "var1" : {
+                    content : "variant1",
+                },
+                "var2" : {
+                    content : "variant2",
+                }
+            }
+            unomiWebTracker.registerPersonalizationObject({
+                "id": "testPersonalization",
+                "strategy": "matching-first",
+                "strategyOptions": {"fallback": "var2"},
+                "contents": [{
+                    "id": "var1",
+                    "filters": [{
+                        "condition": {
+                            "type": "profilePropertyCondition",
+                            "parameterValues": {
+                                "propertyName" : "properties.pageViewCount.unomi-tracker-test",
+                                "comparisonOperator" : "greaterThan",
+                                "propertyValueInteger" : 5
+                            }
+                        }
+                    }]
+                }, {
+                    "id": "var2"
+                }]
+            }, variants, false, function (successfulFilters, selectedFilter) {
+                if (selectedFilter) {
+                    document.getElementById(selectedFilter.content).style.display = '';
+                }
+            });
 
             // start the tracker
             unomiWebTracker.startTracker();
