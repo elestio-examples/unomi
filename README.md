@@ -13,8 +13,8 @@ Deploy Unomi server with CI/CD on Elestio
 You can open Unomi UI here:
 
     URL: https://[CI_CD_DOMAIN]
-    email: karaf
-    password: [ADMIN_PASSWORD]
+    login: "karaf"
+    password: "[ADMIN_PASSWORD]"
 
 # Quick start
 
